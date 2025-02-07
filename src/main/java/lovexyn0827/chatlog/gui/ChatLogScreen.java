@@ -162,7 +162,7 @@ public final class ChatLogScreen extends Screen {
 		public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
 			verticalAmount *= (double)this.itemHeight / 2.0 * (Screen.hasControlDown() ? 
 					(Screen.hasAltDown() ? 160 : 32) : 4.0);
-			this.setScrollAmount(this.getScrollAmount() - verticalAmount);
+			this.setScrollY(this.getScrollY() - verticalAmount);
 			return true;
 		}
 		
@@ -183,7 +183,7 @@ public final class ChatLogScreen extends Screen {
 						}
 					})
 					.collect(ArrayList::new, ArrayList::add, ArrayList::addAll));
-			this.setScrollAmount(0);
+			this.setScrollY(0);
 		}
 
 		private final class Entry extends ElementListWidget.Entry<Entry> {
