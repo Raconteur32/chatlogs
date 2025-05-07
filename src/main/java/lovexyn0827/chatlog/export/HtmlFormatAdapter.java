@@ -23,6 +23,7 @@ import lovexyn0827.chatlog.Session;
 import lovexyn0827.chatlog.Session.Line;
 import lovexyn0827.chatlog.Session.Summary;
 import lovexyn0827.chatlog.i18n.I18N;
+import lovexyn0827.chatlog.util.TextEventContentExtractor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.MinecraftClient;
@@ -30,7 +31,6 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.Texts;
 
 @SuppressWarnings("deprecation")
 final class HtmlFormatAdapter extends FormatAdapter {
@@ -101,7 +101,7 @@ final class HtmlFormatAdapter extends FormatAdapter {
 			js.append(e.getAction().asString());
 			js.append("\", ");
 			js.append("value: \"");
-			serializeHoverEventValue(js, e.getValue(e.getAction()));
+			serializeHoverEvent(js, e);
 			js.append("\"},");
 		});
 		if (js.codePointAt(js.length() - 1) == ',') {
@@ -116,7 +116,7 @@ final class HtmlFormatAdapter extends FormatAdapter {
 			js.append(e.getAction().asString());
 			js.append("\", ");
 			js.append("value: \"");
-			js.append(StringEscapeUtils.escapeJava(e.getValue()));
+			serializeClickEvent(js, e);
 			js.append("\"},");
 		});
 		if (js.codePointAt(js.length() - 1) == ',') {
@@ -126,15 +126,15 @@ final class HtmlFormatAdapter extends FormatAdapter {
 		js.append("};");
 	}
 	
-	private static void serializeHoverEventValue(StringBuilder js, Object val) {
-		if (val instanceof Text) {
-			text2StringIgnoringEvents(js, (Text) val);
-		} else if (val instanceof HoverEvent.EntityContent) {
-			text2StringIgnoringEvents(js, Texts.join(((HoverEvent.EntityContent) val).asTooltip(), (t) -> t));
-		} else if (val instanceof HoverEvent.ItemStackContent) {
-			HoverEvent.ItemStackContent itemVal = (HoverEvent.ItemStackContent) val;
-			text2StringIgnoringEvents(js, itemVal.asStack().toHoverableText());
-		}
+	private static void serializeHoverEvent(StringBuilder js, HoverEvent event) {
+		Text content = TextEventContentExtractor.getHoverEventContent(event);
+		text2StringIgnoringEvents(js, content);
+	}
+	
+	private static void serializeClickEvent(StringBuilder js, ClickEvent event) {
+		String content = TextEventContentExtractor.getClickEventContent(event);
+		
+		js.append(StringEscapeUtils.escapeJava(content));
 	}
 	
 	private static void writeStringWithNewLines(String str, XMLStreamWriter html) throws XMLStreamException {

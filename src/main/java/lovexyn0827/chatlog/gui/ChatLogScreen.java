@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 import lovexyn0827.chatlog.Session;
 import lovexyn0827.chatlog.Session.Line;
 import lovexyn0827.chatlog.i18n.I18N;
+import lovexyn0827.chatlog.util.TextEventContentExtractor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -270,16 +271,14 @@ public final class ChatLogScreen extends Screen {
 					HoverEvent he;
 					boolean hasHoverText = false;
 					if((he = style.getHoverEvent()) != null && !Screen.hasAltDown()) {
-						if(he.getAction() == HoverEvent.Action.SHOW_TEXT) {
-							hasHoverText = true;
-							return he.getValue(HoverEvent.Action.SHOW_TEXT);
-						}
+						hasHoverText = true;
+						return TextEventContentExtractor.getHoverEventContent(he);
 					}
 					
 					ClickEvent ce;
 					if((ce = style.getClickEvent()) != null) {
 						if(!hasHoverText) {
-							return Text.literal(ce.getValue());
+							return Text.literal(TextEventContentExtractor.getClickEventContent(ce));
 						}
 					}
 				}
