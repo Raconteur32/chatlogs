@@ -15,10 +15,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import lovexyn0827.chatlog.Session;
-import lovexyn0827.chatlog.Session.Summary;
 import lovexyn0827.chatlog.i18n.I18N;
 import lovexyn0827.chatlog.mixin.TextFieldWidgetAccessor;
+import lovexyn0827.chatlog.session.Session;
+import lovexyn0827.chatlog.session.Session.Summary;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;

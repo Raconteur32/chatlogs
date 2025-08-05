@@ -49,10 +49,15 @@
 		"gui.restore.failure": "未能恢复未保存的聊天记录！", 
 		"gui.restore.failure.desc": "如有需要请检查chatlog文件夹", 
 		
+		"mark.worldindicate": "玩家进入了存档%s", 
+		"mark.worldindicate.mp": "玩家进入了服务器%s", 
+		
 		"opt.visibleLineCount.desc": "覆写聊天框中消息历史的最大可见行数。", 
 		"opt.autoSaveIntervalInMs.desc": "每次自动保存之间的间隔。在realtimeChatlogSaving启用时失效。", 
 		"opt.realtimeChatlogSaving.desc": "每当有机会时均自动保存聊天记录。因为聊天记录是在单独的线程上保存的，所以该选项一般不会造成明显的性能影响，同时，考虑到一些已知问题，不推荐禁用该选项。", 
 		"opt.allowCorruptedChatlogs.desc": "允许加载因为游戏崩溃等原因而损坏的聊天记录。", 
+		"opt.newSessionPerMcLaunch.desc": "仅在游戏启动时创建新会话。", 
+		"opt.gameSessionIndicator.desc": "启用`newSessionPerMcLaunch`时，在聊天记录中插入进入存档、连接服务器等事件标识。", 
 		
 		"export.this.html.title": "来自 %s 的聊天记录（%d条消息，录制于%s）", 
 		"export.this.html.footer1": "导出于%s，使用", 

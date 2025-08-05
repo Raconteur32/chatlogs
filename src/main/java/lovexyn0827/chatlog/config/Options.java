@@ -26,6 +26,12 @@ public final class Options {
 
 	@Option(type = OptionType.BOOLEAN, defaultValue = "true")
 	public static boolean allowCorruptedChatlogs = true;
+
+	@Option(type = OptionType.BOOLEAN, defaultValue = "false")
+	public static boolean newSessionPerMcLaunch = false;
+
+	@Option(type = OptionType.BOOLEAN, defaultValue = "true")
+	public static boolean gameSessionIndicator = false;
 	
 	private Options() {}
 	
@@ -80,7 +86,7 @@ public final class Options {
 						f.getName(), prop.getProperty(f.getName()));
 				e.printStackTrace();
 				try {
-					f.set(null, o.type().parser.apply(prop.getProperty(f.getName())));
+					f.set(null, o.type().parser.apply(o.defaultValue()));
 				} catch (Exception e1) {
 					throw new RuntimeException("Incorrect default value for " + f.getName(), e1);
 				}

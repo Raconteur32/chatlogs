@@ -11,9 +11,9 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 
-import lovexyn0827.chatlog.Session;
-import lovexyn0827.chatlog.Session.Line;
 import lovexyn0827.chatlog.i18n.I18N;
+import lovexyn0827.chatlog.session.Session;
+import lovexyn0827.chatlog.session.Session.Line;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -128,7 +128,7 @@ public final class ChatLogScreen extends Screen {
 		public ChatLogWidget(MinecraftClient client, Session session) {
 			super(client, ChatLogScreen.this.client.getWindow().getScaledWidth(), 
 					ChatLogScreen.this.height - 40, 20, client.textRenderer.fontHeight + 1);
-			session.getAllMessages().forEach((l) -> {
+			session.getMessages().forEach((l) -> {
 				boolean[] firstLine = new boolean[] { true };
 				ChatMessages.breakRenderedChatMessageLines(l.message, 
 						ChatLogScreen.this.client.getWindow().getScaledWidth() - 14, 

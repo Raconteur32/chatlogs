@@ -5,9 +5,9 @@ import java.io.Writer;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
-import lovexyn0827.chatlog.Session;
-import lovexyn0827.chatlog.Session.Summary;
 import lovexyn0827.chatlog.i18n.I18N;
+import lovexyn0827.chatlog.session.Session;
+import lovexyn0827.chatlog.session.Session.Summary;
 
 class TxtFormatAdapter extends FormatAdapter {
 	public static final Factory<TxtFormatAdapter> FACTORY = new FormatAdapter.Factory<>("txt") {
@@ -30,7 +30,7 @@ class TxtFormatAdapter extends FormatAdapter {
 			.atZone(this.sessionMeta.timeZone.toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 		pw.println(I18N.translate("gui.filter.messages") + ": " + this.sessionMeta.size);
 		pw.println();
-		this.session.getAllMessages().forEach((l) -> {
+		this.session.getMessages().forEach((l) -> {
 			if (config.includeTimeOfMsgs()) {
 				pw.printf("[%s]", Instant.ofEpochMilli(l.time).atZone(this.sessionMeta.timeZone.toZoneId()));
 			}

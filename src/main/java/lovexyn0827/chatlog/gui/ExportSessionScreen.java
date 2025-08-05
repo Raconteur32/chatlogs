@@ -5,11 +5,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.charset.Charset;
 
-import lovexyn0827.chatlog.Session;
-import lovexyn0827.chatlog.Session.Summary;
 import lovexyn0827.chatlog.export.ExportConfig;
 import lovexyn0827.chatlog.export.FormatAdapter;
 import lovexyn0827.chatlog.i18n.I18N;
+import lovexyn0827.chatlog.session.Session;
+import lovexyn0827.chatlog.session.Session.Summary;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;

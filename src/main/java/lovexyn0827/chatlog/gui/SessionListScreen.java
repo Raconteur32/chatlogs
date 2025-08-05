@@ -5,9 +5,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
-import lovexyn0827.chatlog.Session;
-import lovexyn0827.chatlog.Session.Summary;
 import lovexyn0827.chatlog.i18n.I18N;
+import lovexyn0827.chatlog.session.Session;
+import lovexyn0827.chatlog.session.Session.Summary;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
