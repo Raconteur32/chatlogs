@@ -21,23 +21,20 @@ import org.apache.commons.lang3.StringUtils;
 import io.netty.util.internal.StringUtil;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import lovexyn0827.chatlog.config.Options;
-import lovexyn0827.chatlog.session.Session.Line;
-import lovexyn0827.chatlog.session.Session.Summary;
-import lovexyn0827.chatlog.session.Session.Version;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextVisitFactory;
 import net.minecraft.util.Util;
 
 public class SessionRecorder {
 	private static SessionRecorder current = null;
-	private Deque<Line> cachedChatLogs;
+	private Deque<Session.Line> cachedChatLogs;
 	private final LinkedHashMap<UUID, String> uuidToName;
 	private final String saveName;
 	private final int id;
 	private final long startTime;
 	private final TimeZone timeZone;
 	private long messageCount = 0;
-	private final Version version;
+	private final Session.Version version;
 	public final boolean multiplayer;
 	
 	private volatile boolean finalSaving = false;
@@ -50,7 +47,7 @@ public class SessionRecorder {
 		this.saveName = saveName;
 		this.startTime = System.currentTimeMillis();
 		this.timeZone = TimeZone.getDefault();
-		this.version = Version.LATEST;
+		this.version = Session.Version.LATEST;
 		this.multiplayer = multiplayer;
 		this.autosaveWorker = new AutosaveWorker();
 		this.autosaveWorker.start();
@@ -113,7 +110,7 @@ public class SessionRecorder {
 
 	public void onMessage(UUID sender, Text msg) {
 		long timestamp = Util.getEpochTimeMs();
-		this.cachedChatLogs.addLast(new Line(sender, msg, timestamp));
+		this.cachedChatLogs.addLast(new Session.Line(sender, msg, timestamp));
 		this.uuidToName.computeIfAbsent(sender, (uuid) -> {
 			// Naive solution?
 			String string = TextVisitFactory.removeFormattingCodes(msg);
@@ -144,7 +141,7 @@ public class SessionRecorder {
 	/**
 	 * Only guaranteed to be accurate when invoked on terminated or deserialized Sessions.
 	 */
-	private Summary toSummary() {
+	private Session.Summary toSummary() {
 		return new Session.Summary(this.id, this.saveName, this.startTime, Util.getEpochTimeMs(), this.messageCount, 
 				this.timeZone, this.multiplayer, this.version);
 	}
@@ -174,6 +171,7 @@ public class SessionRecorder {
 						SessionRecorder.this.id, StringUtil.escapeCsv(SessionRecorder.this.saveName), 
 						SessionRecorder.this.startTime, SessionRecorder.this.timeZone.getID(), 
 						SessionRecorder.this.multiplayer));
+				temp.flush();
 			} catch (IOException e) {
 				Session.LOGGER.error("Failed to create temp file for chat logs!");
 				e.printStackTrace();
@@ -210,7 +208,7 @@ public class SessionRecorder {
 
 					SessionUtils.wrapTextSerialization(() -> {
 						while (!SessionRecorder.this.cachedChatLogs.isEmpty()) {
-							Line l = SessionRecorder.this.cachedChatLogs.pollFirst();
+							Session.Line l = SessionRecorder.this.cachedChatLogs.pollFirst();
 							this.chatlogWriter.print(getLineTypeMarker(l));
 							this.chatlogWriter.println(l.toJson());
 						}
