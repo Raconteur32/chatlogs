@@ -17,6 +17,9 @@
 		"gui.search.mode.time": "Time", 
 		"gui.search.mode.sender": "Sender", 
 		"gui.search.mode.event": "Event Only", 
+		"gui.search.mode.save_indicator": "World", 
+		"gui.search.nomore": "End of file reached", 
+		"gui.search.nomore.desc": "Unable to find more result in this direction.", 
 		"gui.settings" : "Settings", 
 		"gui.sizeandtime" : "%d:%d:%d (%d Messages)", 
 		"gui.sload.failure": "Unable to load chat log!", 
@@ -60,6 +63,7 @@
 		"opt.gameSessionIndicator.desc": "Insert markers for events like save entrance or server connection to chat logs when `newSessionPerMcLaunch` is enabled.", 
 		"opt.sessionListPaging.desc": "List chating session in pages.",
 		"opt.sessionsPerPage.desc": "Number of sessions displayed within a page.",  
+		"opt.messageFinderFilteringMode.desc": "If enabled, only messages meeting the given criteria will be displayed when searching, otherwise, all messages are kept, with selected ones highlighten.", 
 	
 		"export.this.html.title": "Chat log from %s (%s messages, recorded at %s)", 
 		"export.this.html.footer1": "Exported at %s, with ", 

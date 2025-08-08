@@ -326,7 +326,7 @@ public final class Session {
 			return new Proto(sender, Text.Serialization.fromJson(msgJson), time);
 		}
 		
-		public static Line parseFull(String json) {
+		static Line parseFull(String json) {
 			@SuppressWarnings("deprecation")
 			JsonObject jo = new JsonParser().parse(json).getAsJsonObject();
 			return new Line(UUID.fromString(jo.get("sender").getAsString()), 
@@ -334,7 +334,7 @@ public final class Session {
 					jo.get("time").getAsLong());
 		}
 
-		public JsonObject toJson() {
+		JsonObject toJson() {
 			JsonObject line = new JsonObject();
 			line.addProperty("sender", this.sender.toString());
 			line.addProperty("msgJson", Text.Serialization.toJsonString(this.message));
@@ -376,7 +376,7 @@ public final class Session {
 			return 0xFF000000 | this.markColor;
 		}
 
-		public static Line parseEvent(String json) {
+		static Line parseEvent(String json) {
 			@SuppressWarnings("deprecation")
 			JsonObject jo = new JsonParser().parse(json).getAsJsonObject();
 			return new Event(Text.Serialization.fromJson(jo.get("msgJson").getAsString()), 
@@ -385,7 +385,7 @@ public final class Session {
 		}
 		
 		@Override
-		public JsonObject toJson() {
+		JsonObject toJson() {
 			JsonObject json = new JsonObject();
 			json.addProperty("msgJson", Text.Serialization.toJsonString(this.message));
 			json.addProperty("time", this.time);
@@ -394,7 +394,7 @@ public final class Session {
 		}
 	}
 	
-	static class WorldIndicator extends Line {
+	public static class WorldIndicator extends Line {
 		private final boolean multiplayer;
 		private final String saveName;
 		
@@ -411,7 +411,7 @@ public final class Session {
 			return 0xFFB86960;
 		}
 
-		public static Line parse(String json) {
+		static Line parse(String json) {
 			@SuppressWarnings("deprecation")
 			JsonObject jo = new JsonParser().parse(json).getAsJsonObject();
 			return new WorldIndicator(jo.get("save").getAsString(), 
@@ -420,7 +420,7 @@ public final class Session {
 		}
 
 		@Override
-		public JsonObject toJson() {
+		JsonObject toJson() {
 			JsonObject json = new JsonObject();
 			json.addProperty("time", this.time);
 			json.addProperty("save", this.saveName);

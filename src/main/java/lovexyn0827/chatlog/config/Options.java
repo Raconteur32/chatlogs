@@ -38,6 +38,9 @@ public final class Options {
 
 	@Option(type = OptionType.INTEGER, defaultValue = "50")
 	public static int sessionsPerPage = 50;
+
+	@Option(type = OptionType.BOOLEAN, defaultValue = "true")
+	public static boolean messageFinderFilteringMode = true;
 	
 	private Options() {}
 	
