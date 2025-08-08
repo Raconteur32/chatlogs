@@ -58,6 +58,8 @@
 		"opt.allowCorruptedChatlogs.desc": "Allow loading damaged chat logs, especially those caused by game crashes.", 
 		"opt.newSessionPerMcLaunch.desc": "Session are only created when the client launches.", 
 		"opt.gameSessionIndicator.desc": "Insert markers for events like save entrance or server connection to chat logs when `newSessionPerMcLaunch` is enabled.", 
+		"opt.sessionListPaging.desc": "List chating session in pages.",
+		"opt.sessionsPerPage.desc": "Number of sessions displayed within a page.",  
 	
 		"export.this.html.title": "Chat log from %s (%s messages, recorded at %s)", 
 		"export.this.html.footer1": "Exported at %s, with ", 

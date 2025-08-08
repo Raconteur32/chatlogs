@@ -58,6 +58,8 @@
 		"opt.allowCorruptedChatlogs.desc": "允许加载因为游戏崩溃等原因而损坏的聊天记录。", 
 		"opt.newSessionPerMcLaunch.desc": "仅在游戏启动时创建新会话。", 
 		"opt.gameSessionIndicator.desc": "启用`newSessionPerMcLaunch`时，在聊天记录中插入进入存档、连接服务器等事件标识。", 
+		"opt.sessionListPaging.desc": "按页显示聊天记录。",
+		"opt.sessionsPerPage.desc": "每页显示的聊天会话个数。",  
 		
 		"export.this.html.title": "来自 %s 的聊天记录（%d条消息，录制于%s）", 
 		"export.this.html.footer1": "导出于%s，使用", 

@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
+import lovexyn0827.chatlog.config.Options;
 import lovexyn0827.chatlog.i18n.I18N;
 import lovexyn0827.chatlog.session.Session;
 import lovexyn0827.chatlog.session.Session.Summary;
@@ -25,6 +26,7 @@ import net.minecraft.util.math.MathHelper;
 public final class SessionListScreen extends Screen {
 	private SessionList displayedSessions;
 	private final Predicate<Session.Summary> filterer;
+	private final boolean enablePaging = Options.sessionListPaging;
 	
 	public SessionListScreen() {
 		super(I18N.translateAsText("gui.chatlogs"));
@@ -40,14 +42,7 @@ public final class SessionListScreen extends Screen {
 	protected void init() {
 		this.displayedSessions = new SessionList(this.client);
 		this.addDrawableChild(this.displayedSessions);
-		ButtonWidget prevBtn = ButtonWidget.builder(I18N.translateAsText("gui.prev"), 
-						(btn) -> this.displayedSessions.turnPage(false))
-				.dimensions(this.width / 2 - 128, this.height - 23, 124, 20)
-				.build();
-		ButtonWidget nextBtn = ButtonWidget.builder(I18N.translateAsText("gui.next"), 
-						(btn) -> this.displayedSessions.turnPage(true))
-				.dimensions(this.width / 2 + 4, this.height - 23, 124, 20)
-				.build();
+		int openBtnYPos = this.height - (this.enablePaging ? 46 : 23);
 		ButtonWidget openBtn = ButtonWidget.builder(I18N.translateAsText("gui.open"), 
 				(btn) -> {
 					SessionList.SessionEntry entry = this.displayedSessions.getFocused();
@@ -55,7 +50,7 @@ public final class SessionListScreen extends Screen {
 						entry.loadSession();
 					}
 				})
-				.dimensions(this.width / 2 - 128, this.height - 46, 80, 20)
+				.dimensions(this.width / 2 - 128, openBtnYPos, 80, 20)
 				.build();
 		ButtonWidget exportBtn = ButtonWidget.builder(I18N.translateAsText("gui.export"), 
 				(btn) -> {
@@ -64,7 +59,7 @@ public final class SessionListScreen extends Screen {
 						this.client.setScreen(new ExportSessionScreen(entry.summary));
 					}
 				})
-				.dimensions(this.width / 2 - 40, this.height - 46, 80, 20)
+				.dimensions(this.width / 2 - 40, openBtnYPos, 80, 20)
 				.build();
 		ButtonWidget deleteBtn = ButtonWidget.builder(I18N.translateAsText("gui.del"), 
 				(btn) -> {
@@ -81,7 +76,7 @@ public final class SessionListScreen extends Screen {
 						}, I18N.translateAsText("gui.del.title"), I18N.translateAsText("gui.del.desc")));
 					}
 				})
-				.dimensions(this.width / 2 + 48, this.height - 46, 80, 20)
+				.dimensions(this.width / 2 + 48, openBtnYPos, 80, 20)
 				.build();
 		ButtonWidget filterBtn = ButtonWidget.builder(I18N.translateAsText("gui.filter"), 
 						(btn) -> this.client.setScreen(new FilterSessionScreen()))
@@ -95,8 +90,19 @@ public final class SessionListScreen extends Screen {
 						(btn) -> this.client.setScreen(new TitleScreen()))
 				.dimensions(this.width / 2 + 48, 2, 80, 20)
 				.build();
-		this.addDrawableChild(prevBtn);
-		this.addDrawableChild(nextBtn);
+		if (this.enablePaging) {
+			ButtonWidget prevBtn = ButtonWidget.builder(I18N.translateAsText("gui.prev"), 
+							(btn) -> this.displayedSessions.turnPage(false))
+					.dimensions(this.width / 2 - 128, this.height - 23, 124, 20)
+					.build();
+			ButtonWidget nextBtn = ButtonWidget.builder(I18N.translateAsText("gui.next"), 
+							(btn) -> this.displayedSessions.turnPage(true))
+					.dimensions(this.width / 2 + 4, this.height - 23, 124, 20)
+					.build();
+			this.addDrawableChild(prevBtn);
+			this.addDrawableChild(nextBtn);
+		}
+		
 		this.addDrawableChild(openBtn);
 		this.addDrawableChild(exportBtn);
 		this.addDrawableChild(deleteBtn);
@@ -122,7 +128,8 @@ public final class SessionListScreen extends Screen {
 		private int currentPage = 0;
 		
 		public SessionList(MinecraftClient mc) {
-			super(mc, SessionListScreen.this.width, SessionListScreen.this.height - 84, 30, 32);
+			super(mc, SessionListScreen.this.width, 
+					SessionListScreen.this.height - (SessionListScreen.this.enablePaging ? 84 : 61), 30, 32);
 			this.toPage(0);
 		}
 		
@@ -135,12 +142,20 @@ public final class SessionListScreen extends Screen {
 		}
 
 		private List<Summary> sessionsInPage(int i) {
-			return this.allSessions.subList(i * 50, 
-					Math.max(Math.min(i * 50 + 49, this.allSessions.size()), i * 50));
+			if (!SessionListScreen.this.enablePaging) {
+				return this.allSessions;
+			}
+			
+			int itemPerPage = Options.sessionsPerPage;
+			int pageStart = i * itemPerPage;
+			int pageEnd = Math.min(i * itemPerPage + itemPerPage - 1, this.allSessions.size());
+			return this.allSessions.subList(pageStart, pageEnd);
 		}
 
 		public void turnPage(boolean next) {
-			this.toPage(MathHelper.clamp(this.currentPage + (next ? 1 : -1), 0, this.allSessions.size() / 50));
+			int target = this.currentPage + (next ? 1 : -1);
+			int totalPages = (int) Math.ceil(((double) this.allSessions.size()) / Options.sessionsPerPage);
+			this.toPage(MathHelper.clamp(target, 0, totalPages - 1));
 		}
 		
 		private final class SessionEntry extends AlwaysSelectedEntryListWidget.Entry<SessionEntry> {

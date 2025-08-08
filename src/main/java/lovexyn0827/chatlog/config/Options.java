@@ -31,7 +31,13 @@ public final class Options {
 	public static boolean newSessionPerMcLaunch = false;
 
 	@Option(type = OptionType.BOOLEAN, defaultValue = "true")
-	public static boolean gameSessionIndicator = false;
+	public static boolean gameSessionIndicator = true;
+
+	@Option(type = OptionType.BOOLEAN, defaultValue = "true")
+	public static boolean sessionListPaging = true;
+
+	@Option(type = OptionType.INTEGER, defaultValue = "50")
+	public static int sessionsPerPage = 50;
 	
 	private Options() {}
 	
