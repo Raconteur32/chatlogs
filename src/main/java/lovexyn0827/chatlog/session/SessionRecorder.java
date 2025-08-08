@@ -162,23 +162,26 @@ public class SessionRecorder {
 
 		protected AutosaveWorker() {
 			super("ChatLog Autosave Worker");
-			PrintWriter temp;
+			PrintWriter backend;
 			try {
-				OutputStreamWriter backend = new OutputStreamWriter(new GZIPOutputStream(
-						new BufferedOutputStream(new FileOutputStream(this.chatlogFile)), true));
-				temp = new PrintWriter(backend);
-				temp.println(String.format("%d,%s,%d,%s,%s", 
+				FileOutputStream fos = new FileOutputStream(this.chatlogFile);
+				backend = new PrintWriter(new OutputStreamWriter(new GZIPOutputStream(
+						new BufferedOutputStream(fos), true)));
+				backend.println(String.format("%d,%s,%d,%s,%s", 
 						SessionRecorder.this.id, StringUtil.escapeCsv(SessionRecorder.this.saveName), 
 						SessionRecorder.this.startTime, SessionRecorder.this.timeZone.getID(), 
 						SessionRecorder.this.multiplayer));
-				temp.flush();
+				backend.flush();
+				if (fos.getChannel().tryLock() == null) {
+					Session.LOGGER.error("Failed to lock chatlog file: {}", this.chatlogFile);
+				}
 			} catch (IOException e) {
 				Session.LOGGER.error("Failed to create temp file for chat logs!");
 				e.printStackTrace();
 				throw new RuntimeException();
 			}
 			
-			this.chatlogWriter = temp;
+			this.chatlogWriter = backend;
 		}
 		
 		private static char getLineTypeMarker(Session.Line l) {
@@ -201,7 +204,7 @@ public class SessionRecorder {
 							senders.subList(this.lastAutoSaveSendererCount, senders.size());
 					this.lastAutoSaveSendererCount = senders.size();
 					for(Map.Entry<UUID, String> e : sendersToSave) {
-						this.chatlogWriter.println(String.format("S%s,%s", 
+						this.chatlogWriter.print(String.format("S%s,%s\n", 
 								e.getKey().toString(), 
 								StringUtil.escapeCsv(e.getValue())));
 					}
@@ -210,7 +213,9 @@ public class SessionRecorder {
 						while (!SessionRecorder.this.cachedChatLogs.isEmpty()) {
 							Session.Line l = SessionRecorder.this.cachedChatLogs.pollFirst();
 							this.chatlogWriter.print(getLineTypeMarker(l));
-							this.chatlogWriter.println(l.toJson());
+							// Always use '\n' as line terminator
+							this.chatlogWriter.print(l.toJson());
+							this.chatlogWriter.append('\n');
 						}
 					});
 					this.chatlogWriter.flush();
@@ -220,16 +225,16 @@ public class SessionRecorder {
 					e.printStackTrace();
 				}
 			}
-			
+
 			this.chatlogWriter.close();
 			if (SessionRecorder.this.messageCount == 0) {
 				Session.delete(IntSet.of(SessionRecorder.this.id));
-				UnsavedChatlogRecovery.markUnsaved(null);
+				UnsavedChatlogRecovery.unmarkUnsaved(this.chatlogFile);
 				return;
 			}
 			
 			Session.LOGGER.info("Saved chatlog to: {}", this.chatlogFile);
-			UnsavedChatlogRecovery.markUnsaved(null);
+			UnsavedChatlogRecovery.unmarkUnsaved(this.chatlogFile);
 		}
 	}
 }

@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
@@ -617,15 +618,19 @@ public final class Session {
 			@Override
 			protected Session load(Summary summary) {
 				File file = SessionUtils.id2File(summary.id);
-				try (Scanner s = new Scanner(new InputStreamReader(new GZIPInputStream(
-						new BufferedInputStream(new FileInputStream(file)))))) {
+				try (InputStreamReader s = new InputStreamReader(new GZIPInputStream(
+						new BufferedInputStream(new FileInputStream(file))))) {
 					// Skip meta-line
-					s.nextLine();
+					readLine(s);
 					ArrayDeque<Line> lines = new ArrayDeque<>();
 					LinkedHashMap<UUID, String> namesByUuid = new LinkedHashMap<>();
-					while(s.hasNextLine()) {
+					while (true) {
 						try {
-							String l = s.nextLine();
+							String l = readLine(s);
+							if (l == null) {
+								break;
+							}
+							
 							switch(l.charAt(0)) {
 							case 'M':
 								SessionUtils.wrapTextSerialization(() -> {
@@ -708,10 +713,10 @@ public final class Session {
 			
 			@Override
 			protected Summary inferMetadata(File unsaved) {
-				try (Scanner s = new Scanner(new InputStreamReader(new GZIPInputStream(
-						new BufferedInputStream(new FileInputStream(unsaved)))))) {
+				try (InputStreamReader s = new InputStreamReader(new GZIPInputStream(
+						new BufferedInputStream(new FileInputStream(unsaved))))) {
 					long endTime = unsaved.lastModified();
-					String metaLine = s.nextLine();
+					String metaLine = readLine(s);
 					Iterator<String> itr = StringUtil.unescapeCsvFields(metaLine)
 							.stream()
 							.map(CharSequence::toString)
@@ -722,10 +727,18 @@ public final class Session {
 					TimeZone timeZone = TimeZone.getTimeZone(itr.next());
 					boolean multiplayer = itr.hasNext() ? Boolean.valueOf(itr.next()) : false;
 					int msgCnt = 0;
-					while(s.hasNextLine()) {
-						String l = s.nextLine();
-						if (l.charAt(0) == 'M' || l.charAt(0) == 'E') {
-							msgCnt++;
+					while (true) {
+						try {
+							String l = readLine(s);
+							if (l == null) {
+								break;
+							}
+							
+							if (l.charAt(0) == 'M' || l.charAt(0) == 'E') {
+								msgCnt++;
+							}
+						} catch (IOException e) {
+							break;
 						}
 					}
 					
@@ -744,6 +757,26 @@ public final class Session {
 
 		protected Summary inferMetadata(File unsaved) {
 			return null;
+		}
+		
+		// Not using 
+		private static String readLine(Reader r) throws IOException {
+			StringBuilder line = new StringBuilder();
+			try {
+				int c = r.read();
+				while (c != '\n' && c != '\r' && c != -1) {
+					line.append((char) c);
+					c = r.read();
+				}
+				
+				// Handle "\r\n" sequence, a little bit nasty solution
+				if (c == '\r') {
+					r.skip(1);
+				}
+			} catch (EOFException e) {
+			}
+			
+			return line.length() == 0 ? null : line.toString();
 		}
 	}
 }
