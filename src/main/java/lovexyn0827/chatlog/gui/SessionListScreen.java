@@ -47,7 +47,7 @@ public final class SessionListScreen extends Screen {
 				(btn) -> {
 					SessionList.SessionEntry entry = this.displayedSessions.getFocused();
 					if (entry != null ) {
-						entry.loadSession();
+						loadSession(this.client, entry.summary, this);
 					}
 				})
 				.dimensions(this.width / 2 - 128, openBtnYPos, 80, 20)
@@ -109,6 +109,24 @@ public final class SessionListScreen extends Screen {
 		this.addDrawableChild(filterBtn);
 		this.addDrawableChild(settingBtn);
 		this.addDrawableChild(exitBtn);
+	}
+	
+	static boolean loadSession(MinecraftClient mc, Session.Summary summary, Screen parentScreen) {
+		try {
+			Session session = summary.load();
+			if (session != null) {
+				mc.setScreen(new ChatLogScreen(summary, session, parentScreen));
+			} else {
+				SystemToast warning = new SystemToast(new SystemToast.Type(), 
+						I18N.translateAsText("gui.sload.failure"), 
+						I18N.translateAsText("gui.sload.failure.desc"));
+				MinecraftClient.getInstance().getToastManager().add(warning);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return true;
 	}
 	
 	@Override
@@ -192,24 +210,6 @@ public final class SessionListScreen extends Screen {
 			@Override
 			public boolean mouseClicked(double mouseX, double mouseY, int button) {
 				SessionList.this.setFocused(this);
-				return true;
-			}
-			
-			public boolean loadSession() {
-				try {
-					Session session = this.summary.load();
-					if (session != null) {
-						SessionListScreen.this.client.setScreen(new ChatLogScreen(this.summary, session));
-					} else {
-						SystemToast warning = new SystemToast(new SystemToast.Type(), 
-								I18N.translateAsText("gui.sload.failure"), 
-								I18N.translateAsText("gui.sload.failure.desc"));
-						MinecraftClient.getInstance().getToastManager().add(warning);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
 				return true;
 			}
 		}

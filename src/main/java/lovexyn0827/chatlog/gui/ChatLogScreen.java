@@ -43,11 +43,13 @@ public final class ChatLogScreen extends Screen {
 	private ChatLogWidget chatlogs;
 	private SearchFieldWidget searchField;
 	private CyclingButtonWidget<SearchingMode> searchBarModeChooser;
+	private final Screen parent;
 	
-	protected ChatLogScreen(Session.Summary metadata, Session session) {
+	protected ChatLogScreen(Session.Summary metadata, Session session, Screen parent) {
 		super(Text.literal(metadata.saveName));
 		this.session = session;
 		this.timeZone = metadata.timeZone.toZoneId();
+		this.parent = parent;
 	}
 
 	@Override
@@ -128,7 +130,7 @@ public final class ChatLogScreen extends Screen {
 	
 	@Override
 	public void close() {
-		this.client.setScreen(new SessionListScreen());
+		this.client.setScreen(this.parent);
 	}
 	
 	private final class ChatLogWidget extends ElementListWidget<ChatLogWidget.Entry> {
