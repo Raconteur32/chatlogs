@@ -5,11 +5,20 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Random;
+import java.util.Scanner;
 
 import lovexyn0827.chatlog.PermanentChatLogMod;
 import net.fabricmc.loader.api.FabricLoader;
 
 class SessionUtils {
+	private static final File NEXT_ID_STORAGE_OLD =FabricLoader.getInstance()
+			.getConfigDir()
+			.resolve("permanent-chat-logs.prop")
+			.toFile();
+	private static final File NEXT_ID_STORAGE = new File(Session.CHATLOG_FOLDER, "next_id");
+	
+	
 	static void wrapTextSerialization(RunnableWithIOException task) throws IOException {
 		try {
 			PermanentChatLogMod.PERMISSIVE_EVENTS.set(true);
@@ -19,42 +28,60 @@ class SessionUtils {
 		}
 	}
 	
-	static int allocateId() {
-		Properties prop = new Properties();
-		File optionFile = FabricLoader.getInstance().getConfigDir().resolve("permanent-chat-logs.prop").toFile();
-		if(!optionFile.exists()) {
-			try {
-				optionFile.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+	private static void tryMigrateNextIdStorage() {
+		if (NEXT_ID_STORAGE.exists()) {
+			return;
 		}
 		
-		try (FileReader fr = new FileReader(optionFile)) {
-			prop.load(fr);
+		int id;
+		if (NEXT_ID_STORAGE_OLD.exists()) {
+			Properties prop = new Properties();
+			try (FileReader fr = new FileReader(NEXT_ID_STORAGE_OLD)) {
+				prop.load(fr);
+				String nextIdStr = prop.computeIfAbsent("nextId", (k) -> "0").toString();
+				if(!nextIdStr.matches("\\d+")) {
+					Session.LOGGER.error("Invalid next ID: {}", nextIdStr);
+					id = 1048576;	// Minimize the probability of ID conflicts.
+				} else {
+					id = Integer.parseInt(nextIdStr);
+				}
+				
+			} catch (IOException e) {
+				Session.LOGGER.error("Unable read from old ID counter!");
+				e.printStackTrace();
+				id = 1048576;
+			}
+		} else {
+			id = 0;
+		}
+		
+		try (FileWriter fw = new FileWriter(NEXT_ID_STORAGE)) {
+			fw.write(Integer.toString(id));
 		} catch (IOException e) {
-			Session.LOGGER.error("Unable to load configurations.");
+			Session.LOGGER.error("Unable to create new ID counter!");
 			e.printStackTrace();
 		}
-		
-		String nextIdStr = prop.computeIfAbsent("nextId", (k) -> "0").toString();
+	}
+	
+	static int allocateId() {
+		tryMigrateNextIdStorage();
 		int id;
-		if(!nextIdStr.matches("\\d+")) {
-			Session.LOGGER.error("Invalid next ID: {}", nextIdStr);
-			id = findNextAvailableId(0);
-		} else {
-			id = Integer.parseInt(nextIdStr);
-			if(!checkAvailability(id)) {
-				Session.LOGGER.error("Occupied ID: {}", nextIdStr);
-				id = findNextAvailableId(id);
-			}
+		try (Scanner s = new Scanner(new FileReader(NEXT_ID_STORAGE))) {
+			id = s.nextInt();
+		} catch (IOException e) {
+			Session.LOGGER.error("Unable read from ID counter!");
+			e.printStackTrace();
+			id = new Random().nextInt();	// Seldom conflicts, at least
 		}
 		
-		prop.put("nextId", Integer.toString(id + 1));
-		try (FileWriter fw = new FileWriter(optionFile)) {
-			prop.store(fw, "");
+		while (!checkAvailability(id)) {
+			id++;
+		}
+		
+		try (FileWriter fw = new FileWriter(NEXT_ID_STORAGE)) {
+			fw.write(Integer.toString(id + 1));
 		} catch (IOException e) {
-			Session.LOGGER.error("Unable to save configurations.");
+			Session.LOGGER.error("Unable to save ID counter!");
 			e.printStackTrace();
 		}
 		
@@ -64,14 +91,6 @@ class SessionUtils {
 	static boolean checkAvailability(int id) {
 		// TODO Packed chat logs
 		return !id2File(id).exists();
-	}
-	
-	/**
-	 * @param from Should not be available.
-	 */
-	private static int findNextAvailableId(int from) {
-		while(!checkAvailability(++from));
-		return from;
 	}
 	
 	@FunctionalInterface
