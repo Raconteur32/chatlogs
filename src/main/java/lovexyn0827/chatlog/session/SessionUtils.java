@@ -101,4 +101,8 @@ class SessionUtils {
 	static File id2File(int id) {
 		return new File(Session.CHATLOG_FOLDER, String.format("log-%d.json", id));
 	}
+	
+	static File lockFileOf(File log) {
+		return new File(log.getAbsolutePath() + ".lock");
+	}
 }

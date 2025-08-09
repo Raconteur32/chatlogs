@@ -115,7 +115,7 @@ public class UnsavedChatlogRecovery {
 	}
 
 	private static void tryRestoreUnsaved(File unsaved) {
-		if (unsaved == null || isFileInUse(unsaved) || !unsaved.exists()) {
+		if (unsaved == null || isFileInUse(SessionUtils.lockFileOf(unsaved)) || !unsaved.exists()) {
 			return;
 		}
 		

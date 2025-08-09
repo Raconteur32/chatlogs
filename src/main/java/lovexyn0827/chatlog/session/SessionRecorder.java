@@ -35,7 +35,7 @@ public class SessionRecorder {
 	private final TimeZone timeZone;
 	private long messageCount = 0;
 	private final Session.Version version;
-	public final boolean multiplayer;
+	private final boolean multiplayer;
 	
 	private volatile boolean finalSaving = false;
 	private final Thread autosaveWorker;
@@ -124,6 +124,10 @@ public class SessionRecorder {
 		this.cachedChatLogs.add(e);
 		this.messageCount++;
 	}
+
+	public int getId() {
+		return this.id;
+	}
 	
 	private void addWorldIndicator(String saveName, boolean multiplayer) {
 		this.cachedChatLogs.add(new Session.WorldIndicator(saveName, multiplayer, Util.getEpochTimeMs()));
@@ -159,6 +163,8 @@ public class SessionRecorder {
 		private int lastAutoSaveSendererCount = 0;
 		private int finalLoops = 2;
 		private final File chatlogFile = SessionUtils.id2File(SessionRecorder.this.id);
+		private final File lockFile;
+		private FileOutputStream lockHolder;
 
 		protected AutosaveWorker() {
 			super("ChatLog Autosave Worker");
@@ -172,9 +178,6 @@ public class SessionRecorder {
 						SessionRecorder.this.startTime, SessionRecorder.this.timeZone.getID(), 
 						SessionRecorder.this.multiplayer));
 				backend.flush();
-				if (fos.getChannel().tryLock() == null) {
-					Session.LOGGER.error("Failed to lock chatlog file: {}", this.chatlogFile);
-				}
 			} catch (IOException e) {
 				Session.LOGGER.error("Failed to create temp file for chat logs!");
 				e.printStackTrace();
@@ -182,6 +185,17 @@ public class SessionRecorder {
 			}
 			
 			this.chatlogWriter = backend;
+			this.lockFile = SessionUtils.lockFileOf(this.chatlogFile);
+			try {
+				this.lockHolder = new FileOutputStream(this.lockFile);
+				if (this.lockHolder.getChannel().tryLock() == null) {
+					Session.LOGGER.error("Failed to lock chatlog file: {}", this.chatlogFile);
+				}
+			} catch (IOException e) {
+				Session.LOGGER.error("Failed to lock chatlog file: {}", this.chatlogFile);
+				e.printStackTrace();
+				this.lockHolder = null;
+			}
 		}
 		
 		private static char getLineTypeMarker(Session.Line l) {
@@ -231,6 +245,16 @@ public class SessionRecorder {
 				Session.delete(IntSet.of(SessionRecorder.this.id));
 				UnsavedChatlogRecovery.unmarkUnsaved(this.chatlogFile);
 				return;
+			}
+			
+			if (this.lockHolder != null) {
+				try {
+					this.lockHolder.close();
+					this.lockFile.delete();
+				} catch (IOException e) {
+					Session.LOGGER.error("Failed to unlock chatlog file: {}", this.chatlogFile);
+					e.printStackTrace();
+				}
 			}
 			
 			Session.LOGGER.info("Saved chatlog to: {}", this.chatlogFile);
