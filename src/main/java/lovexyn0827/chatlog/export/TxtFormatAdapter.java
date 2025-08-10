@@ -16,6 +16,7 @@ class TxtFormatAdapter extends FormatAdapter {
 			return new TxtFormatAdapter(out, summary, session, config);
 		}
 	};
+	private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	public TxtFormatAdapter(Writer out, Summary summary, Session session, ExportConfig config) {
 		super(out, summary, session, config);
@@ -32,7 +33,8 @@ class TxtFormatAdapter extends FormatAdapter {
 		pw.println();
 		this.session.getMessages().forEach((l) -> {
 			if (config.includeTimeOfMsgs()) {
-				pw.printf("[%s]", Instant.ofEpochMilli(l.time).atZone(this.sessionMeta.timeZone.toZoneId()));
+				pw.printf("[%s]", TIME_FORMAT.format(Instant.ofEpochMilli(l.time)
+						.atZone(this.sessionMeta.timeZone.toZoneId())));
 			}
 			
 			if (config.includeSender()) {
