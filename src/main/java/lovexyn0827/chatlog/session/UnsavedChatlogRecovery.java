@@ -153,6 +153,7 @@ public class UnsavedChatlogRecovery {
 			MinecraftClient.getInstance().getToastManager().add(warning);
 		}
 		
+		SessionUtils.lockFileOf(unsaved).delete();
 		unmarkUnsaved(unsaved);
 	}
 }
