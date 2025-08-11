@@ -110,6 +110,10 @@ public final class ChatLogScreen extends Screen {
 		this.addDrawableChild(extractBtn);
 	}
 	
+	void scrollTo(int ordinalInSession) {
+		this.chatlogs.scrollTo(ordinalInSession);
+	}
+	
 	private void saveExtractedSession(Session s) {
 		s.save();
 	}
@@ -270,9 +274,25 @@ public final class ChatLogScreen extends Screen {
 			
 			return true;
 		}
+		
+		void scrollTo(int ordinalInSession) {
+			Session.Line prev = null;
+			int curOrd = -1;
+			for (Entry e : this.allEntries) {
+				if (e.owner != prev) {
+					prev = e.owner;
+					curOrd++;
+				}
+				
+				if (curOrd == ordinalInSession) {
+					this.centerScrollOn(e);
+					return;
+				}
+			}
+		}
 
 		private final class Entry extends ElementListWidget.Entry<Entry> {
-			private final Session.Line owner;
+			protected final Session.Line owner;
 			private final OrderedText line;
 			private final String lineStr;
 			private final long time;

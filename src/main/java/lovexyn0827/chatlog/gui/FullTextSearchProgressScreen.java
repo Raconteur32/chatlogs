@@ -12,6 +12,7 @@ import lovexyn0827.chatlog.session.Session;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.Pair;
 
 public class FullTextSearchProgressScreen extends Screen {
 	private final Screen parent;
@@ -20,7 +21,7 @@ public class FullTextSearchProgressScreen extends Screen {
 	private final boolean caseSensitive;
 	private final int total = Session.getSessionSummaries().size();
 	private final AtomicInteger doneCount = new AtomicInteger();
-	private final ConcurrentHashMap<Session.Summary, List<Session.Line>> results = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Session.Summary, List<Pair<Integer, Session.Line>>> results = new ConcurrentHashMap<>();
 	
 	protected FullTextSearchProgressScreen(Screen parent, Predicate<Session.Summary> criteria, 
 			String msgKeyword, boolean caseSensitive) {
@@ -80,36 +81,45 @@ public class FullTextSearchProgressScreen extends Screen {
 				.stream()
 				.sorted((s0, s1) -> (int) (s1.size - s0.size))	// Larger first
 				.forEach((s) -> {
+					int[] currentOrd = new int[] { 0 };
 					ForkJoinPool.commonPool().execute(() -> {
-						if (!this.metadataCriteria.test(s)) {
-							this.doneCount.incrementAndGet();
-							return;
-						}
-						
-						Session session = s.load();
-						if (session == null) {
-							this.doneCount.incrementAndGet();
-							return;
-						}
+						try {
+							if (!this.metadataCriteria.test(s)) {
+								this.doneCount.incrementAndGet();
+								return;
+							}
+							
+							Session session = s.load();
+							if (session == null) {
+								this.doneCount.incrementAndGet();
+								return;
+							}
 
-						if (this.caseSensitive) {
-							String key = this.msgKeyword;
-							for (Session.Line l : session.getMessages()) {
-								if (l.message.getString().contains(key)) {
-									this.results.computeIfAbsent(s, (unused) -> new ArrayList<>()).add(l);
+							if (this.caseSensitive) {
+								String key = this.msgKeyword;
+								for (Session.Line l : session.getMessages()) {
+									if (l.message.getString().contains(key)) {
+										Pair<Integer, Session.Line> item = new Pair<>(currentOrd[0], l);
+										this.results.computeIfAbsent(s, (unused) -> new ArrayList<>()).add(item);
+									}
+								}
+							} else {
+								String keyUpper = this.msgKeyword.toUpperCase();
+								for (Session.Line l : session.getMessages()) {
+									if (l.message.getString().toUpperCase().contains(keyUpper)) {
+										Pair<Integer, Session.Line> item = new Pair<>(currentOrd[0], l);
+										this.results.computeIfAbsent(s, (unused) -> new ArrayList<>()).add(item);
+									}
+									
+									currentOrd[0]++;
 								}
 							}
-						} else {
-							String keyUpper = this.msgKeyword.toUpperCase();
-							for (Session.Line l : session.getMessages()) {
-								if (l.message.getString().toUpperCase().contains(keyUpper)) {
-									this.results.computeIfAbsent(s, (unused) -> new ArrayList<>()).add(l);
-								}
-							}
+							
+						} catch (Throwable e) {
+							e.printStackTrace();
+						} finally {
+							this.doneCount.incrementAndGet();
 						}
-						
-						
-						this.doneCount.incrementAndGet();
 					});
 				});
 	}

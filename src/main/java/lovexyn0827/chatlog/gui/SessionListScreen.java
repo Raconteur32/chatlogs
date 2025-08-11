@@ -9,7 +9,6 @@ import lovexyn0827.chatlog.config.Options;
 import lovexyn0827.chatlog.i18n.I18N;
 import lovexyn0827.chatlog.session.Session;
 import lovexyn0827.chatlog.session.Session.Summary;
-import lovexyn0827.chatlog.session.SessionRecorder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -18,7 +17,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.toast.SystemToast;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -48,7 +46,7 @@ public final class SessionListScreen extends Screen {
 				(btn) -> {
 					SessionList.SessionEntry entry = this.displayedSessions.getFocused();
 					if (entry != null ) {
-						loadSession(this.client, entry.summary, this);
+						GuiUtils.loadSession(this.client, entry.summary, this);
 					}
 				})
 				.dimensions(this.width / 2 - 128, openBtnYPos, 80, 20)
@@ -110,32 +108,6 @@ public final class SessionListScreen extends Screen {
 		this.addDrawableChild(filterBtn);
 		this.addDrawableChild(settingBtn);
 		this.addDrawableChild(exitBtn);
-	}
-	
-	static boolean loadSession(MinecraftClient mc, Session.Summary summary, Screen parentScreen) {
-		if (SessionRecorder.current() != null && SessionRecorder.current().getId() == summary.id) {
-			SystemToast warning = new SystemToast(new SystemToast.Type(), 
-					I18N.translateAsText("gui.sload.failongoing"), 
-					I18N.translateAsText("gui.sload.failongoing.desc"));
-			MinecraftClient.getInstance().getToastManager().add(warning);
-		}
-		
-		try {
-			Session session = summary.load();
-			if (session != null) {
-				mc.setScreen(new ChatLogScreen(summary, session, parentScreen));
-			} else {
-				SystemToast warning = new SystemToast(new SystemToast.Type(), 
-						I18N.translateAsText("gui.sload.failure"), 
-						I18N.translateAsText("gui.sload.failure.desc"));
-				MinecraftClient.getInstance().getToastManager().add(warning);
-				return false;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return true;
 	}
 	
 	@Override

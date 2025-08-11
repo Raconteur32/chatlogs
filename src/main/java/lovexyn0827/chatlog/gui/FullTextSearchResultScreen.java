@@ -1,12 +1,18 @@
 package lovexyn0827.chatlog.gui;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jetbrains.annotations.Nullable;
+
 import lovexyn0827.chatlog.i18n.I18N;
 import lovexyn0827.chatlog.session.Session;
+import lovexyn0827.chatlog.session.Session.Line;
+import lovexyn0827.chatlog.session.Session.Summary;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -16,17 +22,21 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.util.ChatMessages;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
 
 public class FullTextSearchResultScreen extends Screen {
-	private final ConcurrentHashMap<Session.Summary, List<Session.Line>> results;
+	private final ConcurrentHashMap<Summary, List<Pair<Integer, Line>>> results;
 	private SessionList sessions;
 	private MessageList messages;
 
-	protected FullTextSearchResultScreen(ConcurrentHashMap<Session.Summary, List<Session.Line>> results) {
+	protected FullTextSearchResultScreen(ConcurrentHashMap<Summary, List<Pair<Integer, Line>>> results) {
 		super(I18N.translateAsText("gui.filter.result"));
 		this.results = results;
 	}
@@ -53,7 +63,7 @@ public class FullTextSearchResultScreen extends Screen {
 	
 	private class SessionList extends AlwaysSelectedEntryListWidget<SessionList.Entry> {
 		public SessionList(MinecraftClient mc, Set<Session.Summary> sessions) {
-			super(mc, (int) (FullTextSearchResultScreen.this.width * 0.35), 
+			super(mc, (int) (FullTextSearchResultScreen.this.width * 0.38), 
 					FullTextSearchResultScreen.this.height - 30, 
 					20, 32);
 			sessions.stream()
@@ -65,7 +75,7 @@ public class FullTextSearchResultScreen extends Screen {
 		
 		@Override
 		public int getRowLeft() {
-			return (int) (FullTextSearchResultScreen.this.width * 0.15 - 10);
+			return (int) (FullTextSearchResultScreen.this.width * 0.12 - 10);
 		}
 		
 		@Override
@@ -98,10 +108,11 @@ public class FullTextSearchResultScreen extends Screen {
 			
 			@Override
 			public boolean mouseClicked(double mouseX, double mouseY, int button) {
-				FullTextSearchResultScreen.this.messages.setTexts(
+				FullTextSearchResultScreen.this.messages.setSession(
+						this.summary, 
 						FullTextSearchResultScreen.this.results.get(this.summary));
 				if (this.isFocused() && Util.getMeasuringTimeMs() - this.lastClick < 1000) {
-					SessionListScreen.loadSession(FullTextSearchResultScreen.this.client, 
+					GuiUtils.loadSession(FullTextSearchResultScreen.this.client, 
 							this.summary, FullTextSearchResultScreen.this);
 					return true;
 				}
@@ -129,8 +140,10 @@ public class FullTextSearchResultScreen extends Screen {
 	}
 	
 	private class MessageList extends ElementListWidget<MessageList.Entry> {
+		private Session.Summary currentSessionSummary;
+		
 		public MessageList(MinecraftClient mc) {
-			super(mc, (int) (FullTextSearchResultScreen.this.width * 0.35), 
+			super(mc, (int) (FullTextSearchResultScreen.this.width * 0.38), 
 					FullTextSearchResultScreen.this.height - 30, 
 					20, mc.textRenderer.fontHeight + 1);
 			this.setX(this.getRowLeft());
@@ -148,34 +161,123 @@ public class FullTextSearchResultScreen extends Screen {
 		
 		@Override
 		public int getScrollbarPositionX() {
-			return (int) (FullTextSearchResultScreen.this.width * 0.85);
+			return (int) (FullTextSearchResultScreen.this.width * 0.88);
 		}
 		
-		public void setTexts(List<Session.Line> lines) {
+		public void setSession(Session.Summary summary, List<Pair<Integer, Session.Line>> lines) {
+			this.currentSessionSummary = summary;
 			this.clearEntries();
-			this.addEntry(new Entry(I18N.translateAsText("gui.filter.matchcnt", lines.size()).asOrderedText()));
-			for (Session.Line l : lines) {
-				this.addEntry(new Entry(Text.empty().asOrderedText()));
-				ChatMessages.breakRenderedChatMessageLines(l.message, 
-						(int) (FullTextSearchResultScreen.this.client.getWindow().getScaledWidth() * 0.35), 
+			OrderedText title = I18N.translateAsText("gui.filter.matchcnt", lines.size()).asOrderedText();
+			this.addEntry(new Entry(title, null, -1));
+			for (Pair<Integer, Session.Line> e : lines) {
+				this.addEntry(new Entry(Text.empty().asOrderedText(), null, -1));
+				ChatMessages.breakRenderedChatMessageLines(e.getRight().message, 
+						this.width - 10, 
 						FullTextSearchResultScreen.this.textRenderer).forEach((t) -> {
-							this.addEntry(new Entry(t));
+							this.addEntry(new Entry(t, e.getRight(), e.getLeft()));
 						});
 			}
 		}
 
 		private class Entry extends ElementListWidget.Entry<Entry> {
 			private final OrderedText text;
+			private final Line owner;
+			private final int ordinalInSession;
+			private long lastClick = 0;
 			
-			public Entry(OrderedText text) {
+			public Entry(OrderedText text, Session.Line owner, int ord) {
 				this.text = text;
+				this.owner = owner;
+				this.ordinalInSession = ord;
 			}
-
+			
+			public String getFormattedTime() {
+				return (this.owner.time == 0L) ? I18N.translate("gui.unknowntime") : 
+						Instant.ofEpochMilli(this.owner.time)
+								.atZone(MessageList.this.currentSessionSummary.timeZone.toZoneId())
+								.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+			}
+			
 			@Override
 			public void render(DrawContext ctx, int i, int y, int x, 
-					int width, int height, int var7, int var8, boolean var9, float var10) {
+					int width, int height, int mouseX, int mouseY, boolean hovering, float var10) {
 				TextRenderer tr = FullTextSearchResultScreen.this.textRenderer;
-				ctx.drawText(tr, this.text, x, y, 0xFFFFFFFF, false);
+				ctx.drawTextWithShadow(tr, this.text, x + 4, y, 0xFFFFFFFF);
+				ctx.fill(x + 1, y, x + 3, y + 10, this.owner == null ? 0 : this.owner.getMarkColor());
+				if(hovering) {
+					if(this.owner != null && mouseX - x < 4) {
+						String time = this.getFormattedTime();
+						this.renderToolTip(ctx, tr, time, mouseX, mouseY);
+					} else {
+						Text tip = this.getToolTip(mouseX, mouseY);
+						if(tip != null) {
+							this.renderToolTip(ctx, tr, tip, mouseX, mouseY);
+						}
+					}
+				}
+			}
+			
+			private void renderToolTip(DrawContext ctx, TextRenderer tr, String text, int mouseX, int mouseY) {
+				ctx.drawOrderedTooltip(tr, 
+						ChatMessages.breakRenderedChatMessageLines(Text.literal(text), 
+								(int) (MessageList.this.width * 0.7), tr),
+						mouseX, mouseY);
+			}
+
+			private void renderToolTip(DrawContext ctx, TextRenderer tr, Text text, int mouseX, int mouseY) {
+				ctx.drawOrderedTooltip(tr, 
+						ChatMessages.breakRenderedChatMessageLines(text, 
+								(int) (MessageList.this.width * 0.7), tr), 
+						mouseX, mouseY);
+			}
+			
+			@Nullable
+			private Text getToolTip(double mouseX, double mouseY) {
+				TextRenderer tr = FullTextSearchResultScreen.this.textRenderer;
+				double scale = FullTextSearchResultScreen.this.client.getWindow().getScaleFactor();
+				int pos = (int) Math.floor(mouseX - (MessageList.this.getX() + 4) * scale);
+				Style style = tr.getTextHandler().getStyleAt(this.text, pos);
+				if(style != null) {
+					HoverEvent he;
+					boolean hasHoverText = false;
+					if((he = style.getHoverEvent()) != null && !Screen.hasAltDown()) {
+						if(he.getAction() == HoverEvent.Action.SHOW_TEXT) {
+							hasHoverText = true;
+							return he.getValue(HoverEvent.Action.SHOW_TEXT);
+						}
+					}
+					
+					ClickEvent ce;
+					if((ce = style.getClickEvent()) != null) {
+						if(!hasHoverText) {
+							return Text.literal(ce.getValue());
+						}
+					}
+				}
+				
+				return null;
+			}
+			
+			@Override
+			public boolean mouseClicked(double mouseX, double mouseY, int button) {
+				if(Screen.hasControlDown()) {
+					Text tip = this.getToolTip(mouseX, mouseY);
+					if(tip != null) {
+						FullTextSearchResultScreen.this.client.keyboard.setClipboard(tip.getString());
+						return true;
+					}
+				}
+				
+				if (this.owner != null && Util.getMeasuringTimeMs() - this.lastClick < 1000) {
+					GuiUtils.loadSession(FullTextSearchResultScreen.this.client, 
+							MessageList.this.currentSessionSummary, 
+							FullTextSearchResultScreen.this, 
+							this.ordinalInSession);
+					return true;
+				}
+				
+				this.lastClick = Util.getMeasuringTimeMs();
+				return false;
 			}
 
 			@Override
@@ -187,7 +289,6 @@ public class FullTextSearchResultScreen extends Screen {
 			public List<? extends Selectable> selectableChildren() {
 				return Collections.emptyList();
 			}
-			
 		}
 	}
 }
