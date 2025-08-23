@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -517,6 +518,31 @@ public final class Session {
 			}
 		}
 		
+		// Fixes: Filtered session lists are always empty after full-text searches
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.endTime, this.id, this.multiplayer, this.saveName, this.size, 
+					this.startTime, this.timeZone, this.version);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			Summary other = (Summary) obj;
+			return this.endTime == other.endTime && this.id == other.id && this.multiplayer == other.multiplayer
+					&& Objects.equals(this.saveName, other.saveName) && this.size == other.size 
+					&& this.startTime == other.startTime && Objects.equals(this.timeZone, other.timeZone) 
+					&& this.version == other.version;
+		}
+
 		public final String getFormattedStartTime() {
 			return Instant.ofEpochMilli(this.startTime)
 					.atZone(this.timeZone.toZoneId())

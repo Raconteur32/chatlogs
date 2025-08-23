@@ -155,7 +155,7 @@ public final class FilterSessionScreen extends Screen {
 				(int) (width * 0.4F), 14, 
 				I18N.translateAsText("gui.filter.fulltext"));
 		this.caseSenstive = CheckboxWidget.builder(Text.empty(), this.textRenderer)
-				.checked(true)
+				.checked(false)
 				.pos((int) (width * 0.75F) - 18, (int) (height * 0.25F) + 90)
 				.build();
 		this.scopeBtn = CyclingButtonWidget.builder(Scope::getText)
