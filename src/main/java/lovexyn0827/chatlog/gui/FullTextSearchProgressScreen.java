@@ -62,8 +62,8 @@ public class FullTextSearchProgressScreen extends Screen {
 		int barWidth = (int) (this.width * 0.6);
 		int doneWidth = barWidth * done / total;
 		int x = (this.width - barWidth) / 2;
-		ctx.fill(x - 1, y - 1, x + barWidth + 1, y + 17, total, 0xFF7F7F7F);
-		ctx.fill(x, y, x + doneWidth, y + 16, total, 0xFF00FF00);
+		ctx.fill(x - 1, y - 1, x + barWidth + 1, y + 17, 0xFF7F7F7F);
+		ctx.fill(x, y, x + doneWidth, y + 16, 0xFF00FF00);
 		ctx.drawCenteredTextWithShadow(this.textRenderer, String.format("%d / %d", done, total), 
 				this.width / 2, y + 20, 0xFFFFFFFF);
 	}

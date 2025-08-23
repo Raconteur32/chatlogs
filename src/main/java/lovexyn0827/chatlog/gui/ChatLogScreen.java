@@ -121,10 +121,7 @@ public final class ChatLogScreen extends Screen {
 	
 	@Override
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-		this.renderBackground(context, mouseY, mouseY, delta);
 		super.render(context, mouseX, mouseY, delta);
-		this.chatlogs.render(context, mouseX, mouseY, delta);
-		this.searchField.render(context, mouseX, mouseY, delta);
 	}
 	
 	@Override

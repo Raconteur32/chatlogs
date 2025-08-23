@@ -30,7 +30,7 @@ public abstract class MinecraftClientMixin {
 			method= "startIntegratedServer", 
 			at = @At(
 					value = "INVOKE", 
-					target = "net/minecraft/client/MinecraftClient.disconnect()V", 
+					target = "net/minecraft/client/MinecraftClient.disconnectWithProgressScreen()V", 
 					shift = At.Shift.AFTER
 			)
 	)

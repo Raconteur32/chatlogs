@@ -35,6 +35,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.MalformedJsonException;
+import com.mojang.serialization.JsonOps;
 
 import io.netty.util.internal.StringUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -43,9 +44,9 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import lovexyn0827.chatlog.config.Options;
 import lovexyn0827.chatlog.i18n.I18N;
-import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.client.gui.screen.world.WorldListWidget;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Util;
 
 // TODO Merge & Auto merge
@@ -286,6 +287,14 @@ public final class Session {
 		this.continueRecording().end0();
 	}
 	
+	private static Text parseTextJson(String json) {
+		return TextCodecs.CODEC.decode(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow().getFirst();
+	}
+	
+	private static String textToJson(Text text) {
+		return TextCodecs.CODEC.encodeStart(JsonOps.INSTANCE, text).getOrThrow().toString();
+	}
+	
 	public static class Line {
 		public final UUID sender;
 		public final Text message;
@@ -324,21 +333,21 @@ public final class Session {
 			}
 			
 			jr.endObject();
-			return new Proto(sender, Text.Serialization.fromJson(msgJson, DynamicRegistryManager.EMPTY), time);
+			return new Proto(sender, parseTextJson(msgJson), time);
 		}
 		
 		static Line parseFull(String json) {
 			@SuppressWarnings("deprecation")
 			JsonObject jo = new JsonParser().parse(json).getAsJsonObject();
 			return new Line(UUID.fromString(jo.get("sender").getAsString()), 
-					Text.Serialization.fromJson(jo.get("msgJson").getAsString(), DynamicRegistryManager.EMPTY), 
+					parseTextJson(jo.get("msgJson").getAsString()), 
 					jo.get("time").getAsLong());
 		}
 
 		JsonObject toJson() {
 			JsonObject line = new JsonObject();
 			line.addProperty("sender", this.sender.toString());
-			line.addProperty("msgJson", Text.Serialization.toJsonString(this.message, DynamicRegistryManager.EMPTY));
+			line.addProperty("msgJson", textToJson(this.message));
 			line.addProperty("time", this.time);
 			return line;
 		}
@@ -380,8 +389,7 @@ public final class Session {
 		static Line parseEvent(String json) {
 			@SuppressWarnings("deprecation")
 			JsonObject jo = new JsonParser().parse(json).getAsJsonObject();
-			return new Event(Text.Serialization.fromJson(jo.get("msgJson").getAsString(), 
-							DynamicRegistryManager.EMPTY), 
+			return new Event(parseTextJson(jo.get("msgJson").getAsString()), 
 					jo.get("time").getAsLong(), 
 					jo.get("color").getAsInt());
 		}
@@ -389,7 +397,7 @@ public final class Session {
 		@Override
 		JsonObject toJson() {
 			JsonObject json = new JsonObject();
-			json.addProperty("msgJson", Text.Serialization.toJsonString(this.message, DynamicRegistryManager.EMPTY));
+			json.addProperty("msgJson", textToJson(this.message));
 			json.addProperty("time", this.time);
 			json.addProperty("color", this.markColor);
 			return json;

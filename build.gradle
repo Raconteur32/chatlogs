@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.6-SNAPSHOT'
+	id 'fabric-loom' version '1.11-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -16,6 +16,13 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+	maven {
+        url = "https://api.modrinth.com/maven"
+    }
+    
+    maven {
+    	url = "https://maven.quiltmc.org/repository/release/"
+    }
 }
 
 dependencies {
@@ -23,8 +30,15 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	
+	//modImplementation "maven.modrinth:chatpatches:8.0-alpha.4+1.21.5-fabric"
+	//modImplementation "maven.modrinth:yacl:3.6.6+1.21.5-fabric"
+	
+	//implementation "org.quiltmc.parsers:json:0.3.1"
+	//implementation "org.quiltmc.parsers:gson:0.3.1"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	
 	// Uncomment the following line to enable the deprecated Fabric API modules. 
 	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.

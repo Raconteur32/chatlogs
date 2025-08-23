@@ -28,7 +28,7 @@ public class GameMenuScreenMixin extends Screen {
 			), 
 			locals = LocalCapture.CAPTURE_FAILHARD
 	)
-	private void appendButtons(CallbackInfo ci, GridWidget gridWidget, GridWidget.Adder adder, Text text) {
+	private void appendButtons(CallbackInfo ci, GridWidget gridWidget, GridWidget.Adder adder) {
 		ButtonWidget chatlogBtn = ButtonWidget.builder(I18N.translateAsText("gui.chatlogs"), (btn) -> {
 			this.client.setScreen(new SessionListScreen());
 		}).width(204).build();

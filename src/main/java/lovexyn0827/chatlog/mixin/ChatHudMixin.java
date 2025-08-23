@@ -23,13 +23,13 @@ import lovexyn0827.chatlog.session.SessionRecorder;
 public class ChatHudMixin {
 	private static final BooleanSupplier SHOULD_ADD_MESSAGE = Util.make(() -> {
 		try {
-			Class<?> chatLogCl = Class.forName("obro1961.chatpatches.chatlog.ChatLog");
-			Field suspended = chatLogCl.getDeclaredField("suspended");
+			Class<?> chatLogCl = Class.forName("obro1961.chatpatches.ChatLog");
+			Field suspended = chatLogCl.getDeclaredField("restoring");
 			suspended.setAccessible(true);
 			MethodHandle mh = MethodHandles.lookup().unreflectGetter(suspended);
 			return () -> {
 				try {
-					return (boolean) mh.invoke();
+					return !(boolean) mh.invoke();
 				} catch (Throwable e) {
 					return true;
 				}
