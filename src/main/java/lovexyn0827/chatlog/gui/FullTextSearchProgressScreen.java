@@ -52,9 +52,9 @@ public class FullTextSearchProgressScreen extends Screen {
 		if (this.doneCount.get() == this.total) {
 			this.client.setScreen(new ConfirmScreen(this::showSearchResults, 
 					I18N.translateAsText("gui.filter.showmode"), 
-					I18N.translateAsText("gui.filter.showmode.desc"), 
-					I18N.translateAsText("gui.filter.showmode.session"), 
-					I18N.translateAsText("gui.filter.showmode.message")));
+					I18N.translateAsText("gui.filter.showmode.desc"),  
+					I18N.translateAsText("gui.filter.showmode.message"), 
+					I18N.translateAsText("gui.filter.showmode.session")));
 		}
 	}
 	
@@ -68,11 +68,11 @@ public class FullTextSearchProgressScreen extends Screen {
 				this.width / 2, y + 20, 0xFFFFFFFF);
 	}
 	
-	private void showSearchResults(boolean inSessionList) {
-		if (inSessionList) {
-			this.client.setScreen(new SessionListScreen(this.results::containsKey));
-		} else {
+	private void showSearchResults(boolean showMessage) {
+		if (showMessage) {
 			this.client.setScreen(new FullTextSearchResultScreen(this.results));
+		} else {
+			this.client.setScreen(new SessionListScreen(this.results::containsKey));
 		}
 	}
 	
