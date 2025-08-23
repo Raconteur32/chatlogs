@@ -29,7 +29,7 @@ public class ChatHudMixin {
 			MethodHandle mh = MethodHandles.lookup().unreflectGetter(suspended);
 			return () -> {
 				try {
-					return (boolean) mh.invoke();
+					return !(boolean) mh.invoke();
 				} catch (Throwable e) {
 					return true;
 				}
