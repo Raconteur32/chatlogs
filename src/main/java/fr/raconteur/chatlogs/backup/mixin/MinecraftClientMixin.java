@@ -1,12 +1,11 @@
-package fr.raconteur.chatlogs.mixin;
+package fr.raconteur.chatlogs.backup.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import fr.raconteur.chatlogs.ChatLogsMod;
-import fr.raconteur.chatlogs.session.SimpleSessionRecorder;
+import fr.raconteur.chatlogs.backup.session.SessionRecorder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.SaveLoader;
@@ -19,16 +18,12 @@ public abstract class MinecraftClientMixin {
 			at = @At(value = "HEAD")
 	)
 	private void onDisconnected(CallbackInfo ci) {
-		// End current session when disconnecting from world/server
-		ChatLogsMod.LOGGER.debug("Disconnecting - ending chat log session");
-		SimpleSessionRecorder.end();
+		SessionRecorder.end(false);
 	}
 	
 	@Inject(method = "stop", at = @At(value = "INVOKE", target = "java/lang/System.exit(I)V"))
 	private void onStop(CallbackInfo ci) {
-		// End current session when client is stopping
-		ChatLogsMod.LOGGER.info("Minecraft client stopping - ending chat log session");
-		SimpleSessionRecorder.end();
+		SessionRecorder.end(true);
 	}
 	
 	@Inject(
@@ -41,9 +36,6 @@ public abstract class MinecraftClientMixin {
 	)
 	private void onStartSingleplayer(LevelStorage.Session session, ResourcePackManager dataPackManager, 
 			SaveLoader saveLoader, boolean newWorld, CallbackInfo ci) {
-		// Start new session for singleplayer world
-		String worldName = session.getDirectoryName();
-		ChatLogsMod.LOGGER.info("Starting singleplayer world '{}' - beginning chat log session", worldName);
-		SimpleSessionRecorder.start(worldName);
+		SessionRecorder.start(session.getDirectoryName(), false);
 	}
 }
