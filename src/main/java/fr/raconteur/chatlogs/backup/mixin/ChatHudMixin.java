@@ -1,4 +1,4 @@
-package fr.raconteur.chatlogs.mixin;
+package fr.raconteur.chatlogs.backup.mixin;
 
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.MessageIndicator;
@@ -17,13 +17,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import fr.raconteur.chatlogs.session.SimpleSessionRecorder;
+import fr.raconteur.chatlogs.backup.session.SessionRecorder;
 
 @Mixin(value = ChatHud.class, priority = 2023)
 public class ChatHudMixin {
 	private static final BooleanSupplier SHOULD_ADD_MESSAGE = Util.make(() -> {
 		try {
-			// Check for ChatPatches compatibility
 			Class<?> chatLogCl = Class.forName("obro1961.chatpatches.ChatLog");
 			Field suspended = chatLogCl.getDeclaredField("restoring");
 			suspended.setAccessible(true);
@@ -36,7 +35,7 @@ public class ChatHudMixin {
 				}
 			};
 		} catch (Throwable e) {
-			// ChatPatches not present or reflection failed - always log
+			e.printStackTrace();
 			return () -> true;
 		}
 	});
@@ -44,10 +43,8 @@ public class ChatHudMixin {
 	@Inject(method = "addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;"
 			+ "Lnet/minecraft/client/gui/hud/MessageIndicator;)V", at = @At("HEAD"))
 	private void onMessage(Text message, @Nullable MessageSignatureData signature, @Nullable MessageIndicator indicator, CallbackInfo info) {
-		// Log message to our simple session recorder
-		SimpleSessionRecorder current = SimpleSessionRecorder.current();
-		if (current != null && SHOULD_ADD_MESSAGE.getAsBoolean()) {
-			current.logMessage(message);
+		if(SessionRecorder.current() != null && SHOULD_ADD_MESSAGE.getAsBoolean()) {
+			SessionRecorder.current().onMessage(Util.NIL_UUID, message);
 		}
 	}
 }

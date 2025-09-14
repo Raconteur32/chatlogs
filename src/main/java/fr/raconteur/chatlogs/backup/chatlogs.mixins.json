@@ -1,0 +1,23 @@
+{
+	"required": true,
+	"package": "fr.raconteur.chatlogs.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"TitleScreenMixin", 
+		"ChatHudMixin", 
+		"MinecraftClientMixin", 
+		"ConnectScreenMixin", 
+		"ClientPlayNetworkHandlerMixin", 
+		"ChatScreenMixin", 
+		"LanguageManagerMixin", 
+		"ChaHudMixin_overrideMaxMessages", 
+		"ClickEventActionMixin", 
+		"HoverEventActionMixin", 
+		"KeyboardMixin", 
+		"TextFieldWidgetAccessor", 
+		"GameMenuScreenMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
