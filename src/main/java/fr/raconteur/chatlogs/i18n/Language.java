@@ -27,7 +27,7 @@ class Language {
 	 */
 	public Language(String id) throws Exception {
 		this.id = id;
-		Path langFile = FabricLoader.getInstance().getModContainer("permanent-chat-logs")
+		Path langFile = FabricLoader.getInstance().getModContainer("chatlogs")
 				.get().getRootPaths().get(0).resolve("assets/lang/" + id + ".json");
 		try {
 			@SuppressWarnings("deprecation")

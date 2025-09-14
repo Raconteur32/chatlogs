@@ -87,7 +87,7 @@ final class HtmlFormatAdapter extends FormatAdapter {
 		this.html.writeCharacters("\n");
 		StringBuilder js = new StringBuilder();
 		buildEventMap(js);
-		js.append(Files.readString(FabricLoader.getInstance().getModContainer("permanent-chat-logs")
+		js.append(Files.readString(FabricLoader.getInstance().getModContainer("chatlogs")
 				.get().getRootPaths().get(0).resolve("assets/textEventHandler.js")));
 		this.directOut.append(js);
 		this.html.writeEndElement();
@@ -281,7 +281,7 @@ final class HtmlFormatAdapter extends FormatAdapter {
 				LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
 		this.html.writeStartElement("a");
 		this.html.writeAttribute("href", "https://modrinth.com/mod/permanent-chatlogs");
-		ModMetadata modMeta = FabricLoader.getInstance().getModContainer("permanent-chat-logs").get().getMetadata();
+		ModMetadata modMeta = FabricLoader.getInstance().getModContainer("chatlogs").get().getMetadata();
 		this.html.writeCharacters(modMeta.getName() + " " + modMeta.getVersion());
 		this.html.writeEndElement();
 		this.html.writeEmptyElement("br");
@@ -302,7 +302,7 @@ final class HtmlFormatAdapter extends FormatAdapter {
 
 	private void writeStyleSheet() throws XMLStreamException, IOException {
 		this.html.writeStartElement("style");
-		this.html.writeCharacters(Files.readString(FabricLoader.getInstance().getModContainer("permanent-chat-logs")
+		this.html.writeCharacters(Files.readString(FabricLoader.getInstance().getModContainer("chatlogs")
 				.get().getRootPaths().get(0).resolve("assets/defaultStyle.css")));
 		this.html.writeEndElement();
 	}

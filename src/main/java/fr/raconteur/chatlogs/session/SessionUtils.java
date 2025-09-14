@@ -14,7 +14,7 @@ import net.fabricmc.loader.api.FabricLoader;
 class SessionUtils {
 	private static final File NEXT_ID_STORAGE_OLD =FabricLoader.getInstance()
 			.getConfigDir()
-			.resolve("permanent-chat-logs.prop")
+			.resolve("chatlogs.prop")
 			.toFile();
 	private static final File NEXT_ID_STORAGE = new File(Session.CHATLOG_FOLDER, "next_id");
 	
