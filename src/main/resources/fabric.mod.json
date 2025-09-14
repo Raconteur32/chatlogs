@@ -1,26 +1,26 @@
 {
 	"schemaVersion": 1,
-	"id": "permanent-chat-logs",
+	"id": "chatlogs",
 	"version": "${version}",
-	"name": "Permanent Chat Logs",
+	"name": "Chat Logs",
 	"description": "Save chating logs grouped by sessions permanently.",
 	"authors": [
-		"lovexyn0827"
+		"Raconteur"
 	],
 	"contact": {
 		"homepage": "https://github.com/lovexyn0827/Permanent-Chatlogs",
 		"sources": "https://github.com/lovexyn0827/Permanent-Chatlogs"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/permanent-chat-logs/icon.png",
+	"icon": "assets/chatlogs/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"lovexyn0827.chatlog.PermanentChatLogMod"
+			"fr.raconteur.chatlogs.ChatLogsMod"
 		]
 	},
 	"mixins": [
-		"permanent-chat-logs.mixins.json"
+		"chatlogs.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.8",
