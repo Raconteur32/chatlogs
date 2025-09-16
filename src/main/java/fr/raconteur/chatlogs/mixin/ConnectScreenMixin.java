@@ -21,6 +21,6 @@ public class ConnectScreenMixin {
 		// Always use server address as session name
 		String serverAddress = addr != null ? addr.toString() : "Unknown Server";
 		ChatLogsMod.LOGGER.info("Connecting to server '{}' - beginning chat log session", serverAddress);
-		SimpleSessionRecorder.start(serverAddress);
+		SimpleSessionRecorder.start(serverAddress, true); // true = multiplayer
 	}
 }
