@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import fr.raconteur.chatlogs.ChatLogsMod;
+import fr.raconteur.chatlogs.database.SessionDatabase;
 
 /**
  * Handles recovery of chat log files that were being written during a crash
@@ -24,6 +25,9 @@ public class CrashRecovery {
      * Should be called during mod initialization
      */
     public static void performRecovery() {
+        // First, check and close any SQLite sessions that weren't properly ended
+        recoverSqliteSessions();
+        
         if (!UNSAVED_MARKER.exists()) {
             ChatLogsMod.LOGGER.debug("No unsaved marker found, no recovery needed");
             return;
@@ -213,6 +217,42 @@ public class CrashRecovery {
         public String toString() {
             return String.format("RecoveryStats{unsaved=%d, orphanedLocks=%d}", 
                                unsavedFiles, orphanedLocks);
+        }
+    }
+    
+    /**
+     * Check for SQLite sessions that weren't properly closed and close them
+     */
+    private static void recoverSqliteSessions() {
+        try {
+            SessionDatabase db = SessionDatabase.getInstance();
+            List<SessionDatabase.SessionData> sessions = db.getAllSessions();
+            
+            int recovered = 0;
+            for (SessionDatabase.SessionData session : sessions) {
+                // If end_time is 0 or null, the session wasn't properly closed
+                if (session.endTime == 0) {
+                    ChatLogsMod.LOGGER.warn("Found unclosed SQLite session: {} (ID: {})", 
+                                          session.sessionName, session.id);
+                    
+                    // Close the session with current timestamp
+                    db.endSession(session.id);
+                    recovered++;
+                    
+                    ChatLogsMod.LOGGER.info("  ✓ Closed orphaned SQLite session: {} (ID: {})", 
+                                          session.sessionName, session.id);
+                }
+            }
+            
+            if (recovered > 0) {
+                ChatLogsMod.LOGGER.info("SQLite recovery completed: {} sessions closed", recovered);
+            } else {
+                ChatLogsMod.LOGGER.debug("No orphaned SQLite sessions found");
+            }
+            
+        } catch (Exception e) {
+            ChatLogsMod.LOGGER.error("Failed to recover SQLite sessions", e);
+            throw new RuntimeException("Critical error during SQLite session recovery", e);
         }
     }
 }

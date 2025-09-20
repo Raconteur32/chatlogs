@@ -3,13 +3,13 @@
 	"id": "chatlogs",
 	"version": "${version}",
 	"name": "Chat Logs",
-	"description": "Save chating logs grouped by sessions permanently.",
+	"description": "Save chat logs in a separate folder for better readability of conversations.",
 	"authors": [
 		"Raconteur"
 	],
 	"contact": {
-		"homepage": "https://github.com/lovexyn0827/Permanent-Chatlogs",
-		"sources": "https://github.com/lovexyn0827/Permanent-Chatlogs"
+		"homepage": "https://modrinth.com/project/chat-logs",
+		"sources": "https://github.com/Raconteur32/chatlogs"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/chatlogs/icon.png",

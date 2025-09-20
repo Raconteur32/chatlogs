@@ -44,6 +44,6 @@ public abstract class MinecraftClientMixin {
 		// Start new session for singleplayer world
 		String worldName = session.getDirectoryName();
 		ChatLogsMod.LOGGER.info("Starting singleplayer world '{}' - beginning chat log session", worldName);
-		SimpleSessionRecorder.start(worldName);
+		SimpleSessionRecorder.start(worldName, false); // false = singleplayer
 	}
 }

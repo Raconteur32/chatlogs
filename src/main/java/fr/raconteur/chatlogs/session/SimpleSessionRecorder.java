@@ -18,8 +18,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.gson.JsonNull;
+import com.mojang.serialization.JsonOps;
+
 import fr.raconteur.chatlogs.ChatLogsMod;
+import fr.raconteur.chatlogs.config.ChatLogsConfig;
+import fr.raconteur.chatlogs.database.SessionDatabase;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Util;
 
 /**
@@ -31,7 +37,7 @@ public class SimpleSessionRecorder {
     private static final DateTimeFormatter FILE_TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     
     // Reuse the folder logic from original Session.java
-    static final File CHATLOG_FOLDER = Util.make(() -> {
+    public static final File CHATLOG_FOLDER = Util.make(() -> {
         File f = new File("chatlogs");
         boolean success;
         l: 
@@ -72,6 +78,7 @@ public class SimpleSessionRecorder {
     private final File logFile;
     private final File lockFile;
     private final long startTime;
+    private final long sessionId; // SQLite session ID
     
     // Background writing components
     private final BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
@@ -81,7 +88,7 @@ public class SimpleSessionRecorder {
     private FileLock fileLock;
     private RandomAccessFile lockRaf;
     
-    private SimpleSessionRecorder(String sessionName) {
+    private SimpleSessionRecorder(String sessionName, boolean isMultiplayer) {
         this.sessionName = sessionName;
         this.startTime = System.currentTimeMillis();
         
@@ -90,6 +97,18 @@ public class SimpleSessionRecorder {
         String fileName = String.format("%s_%s.txt", sessionName.replaceAll("[^a-zA-Z0-9]", "_"), timestamp);
         this.logFile = new File(CHATLOG_FOLDER, fileName);
         this.lockFile = new File(CHATLOG_FOLDER, fileName + ".lock");
+        
+        // Create SQLite session
+        long tempSessionId = -1;
+        try {
+            SessionDatabase db = SessionDatabase.getInstance();
+            tempSessionId = db.createSession(sessionName, isMultiplayer, this.logFile.getAbsolutePath());
+            ChatLogsMod.LOGGER.info("Created SQLite session: {} (ID: {})", sessionName, tempSessionId);
+        } catch (Exception e) {
+            ChatLogsMod.LOGGER.error("Failed to create SQLite session for: {}", sessionName, e);
+            throw new RuntimeException("Critical error: Unable to create SQLite session", e);
+        }
+        this.sessionId = tempSessionId;
         
         // Initialize file locking and writer
         if (initializeWriter()) {
@@ -265,7 +284,7 @@ public class SimpleSessionRecorder {
         }
     }
     
-    public static SimpleSessionRecorder start(String sessionName) {
+    public static SimpleSessionRecorder start(String sessionName, boolean isMultiplayer) {
         if (current != null) {
             current.end();
         }
@@ -273,7 +292,7 @@ public class SimpleSessionRecorder {
         // Clean up any orphaned lock files before starting new session
         cleanupOrphanedLocks();
         
-        current = new SimpleSessionRecorder(sessionName);
+        current = new SimpleSessionRecorder(sessionName, isMultiplayer);
         return current;
     }
     
@@ -313,6 +332,25 @@ public class SimpleSessionRecorder {
         if (!messageQueue.offer(formattedMessage)) {
             ChatLogsMod.LOGGER.warn("Chat log message queue is full, dropping message");
         }
+        
+        // Also save to SQLite
+        try {
+            // Extract sender name using regex patterns
+            String senderName = ChatLogsConfig.getInstance().extractSenderName(sessionName, messageText);
+            
+            // Serialize message to JSON using TextCodecs
+            String messageJson = TextCodecs.CODEC.encodeStart(JsonOps.INSTANCE, message)
+                .result()
+                .orElse(JsonNull.INSTANCE)
+                .toString();
+            
+            SessionDatabase db = SessionDatabase.getInstance();
+            db.addMessage(sessionId, senderName, messageText, messageJson);
+            
+        } catch (Exception e) {
+            ChatLogsMod.LOGGER.error("Failed to save message to SQLite", e);
+            throw new RuntimeException("Critical error: Unable to save message to SQLite", e);
+        }
     }
     
     /**
@@ -327,6 +365,18 @@ public class SimpleSessionRecorder {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 ChatLogsMod.LOGGER.warn("Interrupted while waiting for writer thread to finish");
+            }
+        }
+        
+        // End SQLite session
+        if (sessionId != -1) {
+            try {
+                SessionDatabase db = SessionDatabase.getInstance();
+                db.endSession(sessionId);
+                ChatLogsMod.LOGGER.info("Ended SQLite session: {}", sessionId);
+            } catch (Exception e) {
+                ChatLogsMod.LOGGER.error("Failed to end SQLite session: {}", sessionId, e);
+                throw new RuntimeException("Critical error: Unable to end SQLite session", e);
             }
         }
     }
