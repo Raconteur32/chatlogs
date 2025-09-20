@@ -1,46 +1,40 @@
-## Permanent Chatlog
+# Chat Logs
 
-[Download On Modrinth](https://modrinth.com/mod/permanent-chatlogs)
+A lightweight Minecraft mod for saving chat logs in a readable format with minimal interference to the base game.
 
-## Introduction
+## Inspiration
 
-This Mod saves chat logs to the disk to prevent them from being lost when exiting.
+While this mod shares virtually no code with the original project, it is heavily inspired by [Permanent Chatlogs](https://modrinth.com/mod/permanent-chatlogs), which offers an alternative approach to saving chat logs separately from the main game logs.
 
-Compared with the plain log file (i.e. logs in the "logs" folder), the saved logs here support additional styles including colors, fonts, and even hovering texts. Besides, the time information when messages are received, which is absent in the vanilla game, is available here.
+## Philosophy
 
-Following features are available or planned now: 
+This mod aims to make chat logs readable while interfering as little as possible with the base game mechanics. It uses very few mixins that inject code into vanilla methods, maximizing compatibility with other mods and reducing the likelihood of being broken by game updates. This is a significant advantage for modpacks, as the mod will generally not need updates when new versions of Minecraft are released.
 
-- Recording chat logs.
-- Exporting chat logs as TXT or HTML.
-- Enhance of vanilla chat HUD (like long chat history).
-- Deleting existing sessions.
-- Spliting existing sessions.
-- Mark for events in sessions.
-- Searching for sessions.
-- Searching for message in all sessions (WIP).
-- Mergeing a set of sessions, especally those recorded in the same place (WIP).
+## Features
 
-## Filtering sessions
+The mod uses two complementary approaches to save chat logs:
 
-Also, searching for sessions or messages in the history is supported, you may filter sessions by: 
+### 1. Session-based TXT Files
+- **Simple text format**: Each session is saved as a plain `.txt` file
+- **Session definition**: A session spans from connection to a server/singleplayer world until disconnection
+- **Easy to read**: Human-readable format that can be opened with any text editor
+- **Reliable**: Crash-resistant with automatic recovery mechanisms
 
-- The save or server associated with the session.
-- The day, month, or year in which the session started.
-  - Examples: 20240306, 202403, 2024
-- The number of messages in the session.
-  - The format of integer ranges in entity selectors is used here.
-  - For example, ..20 stands for 0 to 20, while 20.. stands for 20 and above. 
-- The length of the session.
-  - The format of integer ranges in entity selectors is used here.
-- Whether or not the session is recorded in a multiplayer server.
+### 2. Detailed Database Storage (Experimental)
+- **Rich formatting preservation**: Saves complete text formatting details in an SQLite database
+- **Enhanced search capabilities**: Enables advanced searching and filtering of chat history
+- **External GUI interface**: Provides a dedicated graphical interface for better reading experience
+- **JSON preservation**: Maintains original Minecraft Text component structure with colors, hover events, and styling
 
-## Settings
+## External Interface
 
-- `visibleLineCount`: Overrides the maximum number of messages in the chatting HUD.
-- `autoSaveIntervalInMs`: The interval of the auto-saving of chat logs, in milliseconds.
+An experimental Python GUI is available for browsing the database logs with full formatting support:
 
-## Tooltips
+🔗 **[Chat Log GUI (Experimental)](https://github.com/Raconteur32/chatlogs/blob/main/log_gui.py)**
 
-If a text in the chat logs has a click event or hover event, a hovering tooltip is displayed, with the argument of the event on it. When both click event and hover event are present in the same text, only the argument of the hover event is displayed initially, to get the argument of the click event, press the Alt key.
+This interface provides:
+- Session browsing with message counts and timestamps
+- Full Minecraft color code support
+- Interactive tooltips for hover events
+- Copy-to-clipboard functionality
 
-The texts on the tooltips can be copied by clicking the text with Ctrl down.
